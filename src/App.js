@@ -1,91 +1,90 @@
-import React, { useState } from 'react'
-import './App.css';
-
+import React, { Fragment, useState, useEffect } from 'react'
+import axios from 'axios'
 
 const App = () => {
-  const [ persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: "080-1111-1111" },
-    { name: 'Ada Lovelace', number: '39-44-5323523' },
-    { name: 'Dan Abramov', number: '12-43-234345' },
-    { name: 'Mary Poppendieck', number: '39-23-6423122' }
-  ]) 
-  const [ newName, setNewName ] = useState('')
-  const [ newNumber, setNewNumber ] = useState('')
-  
-  const newObject = {
-    id: persons.length + 1,
-    name: newName,
-    number: newNumber
-  }
+  const [data, setData] = useState([]);
+  const [query, setQuery] = useState('Afghanistan');
+  const [url, setUrl] = useState(
+    'https://restcountries.eu/rest/v2/all?query=Afghanistan',
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const addList = (event) => {
-    event.preventDefault()
-    setPersons(persons.concat(newObject))
-    setNewName('')
-    setNewNumber('')
-  }
-
-  const NumbersList = () => {
-    const list = persons.map((value, key) => {
-        return <div key={key}> {`${persons[key].name} ${persons[key].number}`}</div>
-      })
-    return (
-      <div>
-        {list}
-      </div>
-    )
-  }
-
-  const handleNameChange = (event) => {
-    persons.map((value, key) => {
-      if (event.target.value === persons[key].name) {        
-        alert(`${newName} is already added to phonebook`)
+  useEffect(() => { //useEffectで直接async-awaitは使用不可
+    const fetchData = async () => {
+      setIsLoading(true);
+      const result = await axios.get(url);
+      setData(result.data);
+      setIsLoading(false);
     }
-    })  
-    setNewName(event.target.value);
-  }
+    fetchData();
+  }, [url]);
+    
+  
 
-  const handleNumberChange = (event) => {
-    persons.map((value, key) => {
-      if (event.target.value === persons[key].number) {
-        alert(`${newNumber} is already added to phonebook`)
-      }
-    })
-    setNewNumber(event.target.value);
-  }
- 
+  // const CountriesList = () => {
+  //   const allCountries = () => {
+  //     return (
+  //       data.map((value, index) => (
+  //         <div key={index}>
+  //           {value.name}
+  //         </div>
+  //       ))
+  //     )
+  //   }
+  //   if (!data.name > 10) {
+  //     return allCountries();
+  //   } else {
+  //     return "マッチしすぎですわ"
+  //   }
+  // }
+
   return (
-    <div>
-      <div>
-        <h2>add a new</h2>
-        <form onSubmit={addList}>
-          <div>
-            name:
-            <input
-              value={newName}
-              onChange={handleNameChange}
-            />
-          </div>
-          <div>
-            number:
-            <input
-              value={newNumber}
-              onChange={handleNumberChange}
-            />
-          </div>
-          <div>
-            <button type="submit">add</button>
-          </div>
-        </form>
-      </div>
-
-      <div>
-        <h2>Numbers</h2>
-        <NumbersList />
-      </div>
-    </div>
+    <Fragment>
+        <form onSubmit={event => {
+            setUrl(`https://restcountries.eu/rest/v2/name/${query}`);
+            event.preventDefault();
+        }}>
+        <input
+          type="text"
+          value={query}
+          onChange={event => setQuery(event.target.value)}
+        />
+          <button type="submit">検索</button>
+      </form>
+        {isLoading ? (
+          <div>ロード中...</div>
+        ) : (
+       <ul>
+            {
+              data.map((value, index) => {
+                return (
+                  <div key={index}>
+                    <h1>
+                      {value.name}
+                    </h1>
+                    <div>
+                      <p>capital {value.capital}</p>
+                      <p>population {value.population}</p>  
+                    </div>
+                    <h2>language</h2>
+                    <div>
+                      {value.languages.map((v, i) => {
+                        return (<li key={i}>{v.name}</li>)
+                      })}
+                    </div>
+                    <img src={value.flag} alt={value.flag} />
+                  </div>
+                )
+              })
+            }
+        </ul>
+        )}
+    </Fragment>
   )
-
 }
 
-export default App;
+
+export default App
+
+
+
